@@ -21,7 +21,7 @@ namespace System.Text
     // class to carry out modifications upon strings.
     [Serializable]
     [TypeForwardedFrom("mscorlib, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089")]
-    public sealed partial class StringBuilder : ISerializable
+    public sealed partial class StringBuilder : ISerializable, ISpanFormattable
     {
         // A StringBuilder is internally represented as a linked list of blocks each of which holds
         // a chunk of the string.  It turns out string as a whole can also be represented as just a chunk,
@@ -2796,6 +2796,23 @@ namespace System.Text
 
             Debug.Assert(chunk != null, "We fell off the beginning of the string!");
             AssertInvariants();
+        }
+
+        bool ISpanFormattable.TryFormat(Span<char> destination, out int charsWritten, ReadOnlySpan<char> format, IFormatProvider? provider)
+        {
+            if (destination.Length < Length)
+            {
+                charsWritten = 0;
+                return false;
+            }
+
+            CopyTo(0, destination, Length);
+            charsWritten = Length;
+            return true;
+        }
+        string IFormattable.ToString(string? format, IFormatProvider? formatProvider)
+        {
+            return ToString();
         }
 
         /// <summary>Provides a handler used by the language compiler to append interpolated strings into <see cref="StringBuilder"/> instances.</summary>
